@@ -69,7 +69,7 @@
         .button {
             display: inline-block;
             padding: 15px 30px;
-            margin-top: 50px;
+            margin-top: 80px; /* Increased gap between cube and button */
             font-size: 1.5em;
             color: #fff;
             border: 2px solid #00f;
@@ -98,5 +98,33 @@
         </div>
         <a href="page2.html" class="button">Begin</a>
     </div>
+
+    <script>
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+
+        function generateMetronome() {
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            oscillator.type = 'square'; // Chip wave sound
+            oscillator.frequency.setValueAtTime(1000, context.currentTime); // High pitch
+            gainNode.gain.setValueAtTime(0.02, context.currentTime); // Quieter volume
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.1); // Short click sound
+        }
+
+        function startMetronome(bpm) {
+            const interval = 60 / bpm * 1000; // Calculate interval in ms
+            setInterval(generateMetronome, interval); // Generate metronome clicks based on BPM
+        }
+
+        window.onload = () => {
+            startMetronome(60); // Start metronome at 60 BPM as soon as the page loads
+        };
+    </script>
 </body>
 </html>
