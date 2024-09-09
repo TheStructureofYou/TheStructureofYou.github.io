@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Structure of You</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        #container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 50px;
+            margin-top: -100px; /* Move the title higher */
+            letter-spacing: 2px; /* Adds space between letters for a techy look */
+        }
+
+        .cube {
+            width: 100px;  /* Smaller cube */
+            height: 100px;
+            position: relative;
+            perspective: 600px;
+            margin: 0 auto;
+        }
+
+        .cube-mesh {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            animation: spin 5s infinite linear;
+        }
+
+        .cube-mesh div {
+            position: absolute;
+            width: 100px; /* Adjust to match the smaller cube size */
+            height: 100px;
+            background: transparent;
+            border: 2px solid #00f; /* Blue wireframe */
+        }
+
+        .cube-mesh div:nth-child(1) { transform: rotateY(0deg) translateZ(50px); }
+        .cube-mesh div:nth-child(2) { transform: rotateY(90deg) translateZ(50px); }
+        .cube-mesh div:nth-child(3) { transform: rotateY(180deg) translateZ(50px); }
+        .cube-mesh div:nth-child(4) { transform: rotateY(-90deg) translateZ(50px); }
+        .cube-mesh div:nth-child(5) { transform: rotateX(90deg) translateZ(50px); }
+        .cube-mesh div:nth-child(6) { transform: rotateX(-90deg) translateZ(50px); }
+
+        @keyframes spin {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        .button {
+            display: inline-block;
+            padding: 15px 30px;
+            margin-top: 50px;
+            font-size: 1.5em;
+            color: #fff;
+            border: 2px solid #00f;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .button:hover {
+            background-color: #00f;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>The Structure of You</h1>
+        <div class="cube">
+            <div class="cube-mesh">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <a href="page2.html" class="button">Begin</a>
+    </div>
+</body>
+</html>
