@@ -3,188 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Model Viewer with Music</title>
+    <title>The Structure of You</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; }
-        canvas { display: block; }
-        #downloadBtn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 10px 20px;
-            background-color: #0077ff;
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 10;
+            overflow: hidden;
+        }
+
+        #container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 50px;
+            margin-top: -100px; /* Move the title higher */
+            letter-spacing: 2px; /* Adds space between letters for a techy look */
+        }
+
+        .cube {
+            width: 100px;  /* Smaller cube */
+            height: 100px;
+            position: relative;
+            perspective: 600px;
+            margin: 0 auto;
+        }
+
+        .cube-mesh {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            animation: spin 5s infinite linear;
+        }
+
+        .cube-mesh div {
+            position: absolute;
+            width: 100px; /* Adjust to match the smaller cube size */
+            height: 100px;
+            background: transparent;
+            border: 2px solid #00f; /* Blue wireframe */
+        }
+
+        .cube-mesh div:nth-child(1) { transform: rotateY(0deg) translateZ(50px); }
+        .cube-mesh div:nth-child(2) { transform: rotateY(90deg) translateZ(50px); }
+        .cube-mesh div:nth-child(3) { transform: rotateY(180deg) translateZ(50px); }
+        .cube-mesh div:nth-child(4) { transform: rotateY(-90deg) translateZ(50px); }
+        .cube-mesh div:nth-child(5) { transform: rotateX(90deg) translateZ(50px); }
+        .cube-mesh div:nth-child(6) { transform: rotateX(-90deg) translateZ(50px); }
+
+        @keyframes spin {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        .button {
+            display: inline-block;
+            padding: 15px 30px;
+            margin-top: 50px;
+            font-size: 1.5em;
+            color: #fff;
+            border: 2px solid #00f;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .button:hover {
+            background-color: #00f;
+            color: #000;
         }
     </style>
 </head>
 <body>
-    <button id="downloadBtn">Download Model</button>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/exporters/OBJExporter.js"></script>
-    <script>
-        // Three.js scene setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Lights
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5, 5, 5).normalize();
-        scene.add(light);
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambientLight);
-
-        // Noise instance
-        const noise = new SimplexNoise();
-
-        function createRandomSmoothGeometry() {
-            const baseGeometry = createBaseGeometry();
-            addSmoothProtrusions(baseGeometry);
-            return baseGeometry;
-        }
-
-        function createBaseGeometry() {
-            const randomShape = Math.floor(Math.random() * 3);
-            let geometry;
-
-            if (randomShape === 0) {
-                const width = Math.random() * 2 + 0.5;
-                const height = Math.random() * 2 + 0.5;
-                const depth = Math.random() * 2 + 0.5;
-                geometry = new THREE.BoxGeometry(width, height, depth, 10, 10, 10);
-            } else if (randomShape === 1) {
-                const radius = Math.random() * 1.5 + 0.5;
-                const widthSegments = Math.floor(Math.random() * 8 + 16);
-                const heightSegments = Math.floor(Math.random() * 8 + 16);
-                geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
-            } else {
-                const topRadius = Math.random() * 1.5;
-                const bottomRadius = Math.random() * 1.5;
-                const height = Math.random() * 3 + 0.5;
-                const radialSegments = Math.floor(Math.random() * 8 + 16);
-                geometry = new THREE.CylinderGeometry(topRadius, bottomRadius, height, radialSegments, 10);
-            }
-
-            return geometry;
-        }
-
-        function addSmoothProtrusions(geometry) {
-            const vertices = geometry.attributes.position.array;
-            const scale = 0.5;
-            const strength = Math.random() * 0.5 + 0.1;
-
-            for (let i = 0; i < vertices.length; i += 3) {
-                const x = vertices[i];
-                const y = vertices[i + 1];
-                const z = vertices[i + 2];
-                const noiseValue = noise.noise3D(x * scale, y * scale, z * scale);
-                vertices[i] += noiseValue * strength;
-                vertices[i + 1] += noiseValue * strength;
-                vertices[i + 2] += noiseValue * strength;
-            }
-
-            geometry.attributes.position.needsUpdate = true;
-        }
-
-        const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, flatShading: true });
-        const randomSmoothGeometry = createRandomSmoothGeometry();
-        const model = new THREE.Mesh(randomSmoothGeometry, material);
-        scene.add(model);
-
-        const boundingBox = new THREE.Box3().setFromObject(model);
-        const size = boundingBox.getSize(new THREE.Vector3()).length();
-        const scale = 25 / size;
-        model.scale.set(scale, scale, scale);
-
-        camera.position.z = 50;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            model.rotation.y += 0.005;
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        function downloadModel() {
-            const exportGeometry = model.geometry.clone();
-            exportGeometry.scale(model.scale.x, model.scale.y, model.scale.z);
-            const exporter = new THREE.OBJExporter();
-            const result = exporter.parse(new THREE.Mesh(exportGeometry, material));
-            const blob = new Blob([result], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'model.obj';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-
-        document.getElementById('downloadBtn').addEventListener('click', downloadModel);
-
-        // Music and metronome setup
-        const context = new (window.AudioContext || window.webkitAudioContext)();
-        const melody = [220, 261.63, 293.66, 329.63, 392, 440, 493.88, 523.25];
-
-        function generateBeautifulSound() {
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-            const panNode = context.createStereoPanner();
-            const frequency = melody[Math.floor(Math.random() * melody.length)];
-            oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(frequency, context.currentTime);
-            gainNode.gain.setValueAtTime(0.05, context.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.1, context.currentTime + 0.5);
-            gainNode.gain.linearRampToValueAtTime(0.05, context.currentTime + 1.0);
-            panNode.pan.value = Math.random() * 2 - 1;
-            oscillator.connect(gainNode);
-            gainNode.connect(panNode);
-            panNode.connect(context.destination);
-            oscillator.start();
-            oscillator.stop(context.currentTime + 1);
-        }
-
-        function generateMetronome() {
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(1000, context.currentTime);
-            gainNode.gain.setValueAtTime(0.02, context.currentTime);
-            oscillator.connect(gainNode);
-            gainNode.connect(context.destination);
-            oscillator.start();
-            oscillator.stop(context.currentTime + 0.1);
-        }
-
-        function startGeneratingBeautifulSounds() {
-            setInterval(generateBeautifulSound, 1000);
-        }
-
-        function startMetronome(bpm) {
-            const interval = 60 / bpm * 1000;
-            setInterval(generateMetronome, interval);
-        }
-
-        // Start music as soon as the page is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            startGeneratingBeautifulSounds();
-            startMetronome(60);
-        });
-    </script>
+    <div id="container">
+        <h1>The Structure of You</h1>
+        <div class="cube">
+            <div class="cube-mesh">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <a href="page2.html" class="button">Begin</a>
+    </div>
 </body>
 </html>
