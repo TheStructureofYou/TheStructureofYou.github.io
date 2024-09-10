@@ -82,7 +82,8 @@
             "Discover yourself",
             "Embrace your angles",
             "Hold the complexity",
-            "Explore your layers"
+            "Explore your layers",
+            "submit"
         ];
 
         // Create random, crazier geometry with thickness constraints
@@ -124,7 +125,7 @@
             const strength = Math.random() * 0.8 + 0.2;
             const twistFactor = Math.random() * 0.1;
             const bendFactor = Math.random() * 0.1;
-            const minThickness = 0.1;
+            const minThickness = 0.05;
 
             const boundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(geometry));
             const size = boundingBox.getSize(new THREE.Vector3());
