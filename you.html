@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Model Viewer with Music</title>
+    <title>Crazy 3D Model Viewer with Music</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -19,9 +19,35 @@
             cursor: pointer;
             z-index: 10;
         }
+        #textOverlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            color: white;
+            text-align: center;
+            z-index: 10;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.5s ease-in-out;
+        }
+        #randomPhrase {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: white;
+            text-align: center;
+            z-index: 10;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
+    <div id="textOverlay">THIS IS YOU</div>
+    <div id="randomPhrase"></div>
     <button id="downloadBtn">Download Model</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -45,9 +71,24 @@
         // Noise instance
         const noise = new SimplexNoise();
 
-        function createRandomSmoothGeometry() {
+        let model;
+        let lastModel = false; // Flag to check if the last model is displayed
+
+        // List of random phrases
+        const phrases = [
+            "Experience it",
+            "Touch your facets",
+            "Feel the shape",
+            "Discover yourself",
+            "Embrace your angles",
+            "Hold the complexity",
+            "Explore your layers"
+        ];
+
+        // Create random, crazier geometry with thickness constraints
+        function createCrazyGeometry() {
             const baseGeometry = createBaseGeometry();
-            addSmoothProtrusions(baseGeometry);
+            applyExtremeDeformationsWithThickness(baseGeometry);
             return baseGeometry;
         }
 
@@ -59,56 +100,95 @@
                 const width = Math.random() * 2 + 0.5;
                 const height = Math.random() * 2 + 0.5;
                 const depth = Math.random() * 2 + 0.5;
-                geometry = new THREE.BoxGeometry(width, height, depth, 10, 10, 10);
+                geometry = new THREE.BoxGeometry(width, height, depth, 15, 15, 15);
             } else if (randomShape === 1) {
                 const radius = Math.random() * 1.5 + 0.5;
-                const widthSegments = Math.floor(Math.random() * 8 + 16);
-                const heightSegments = Math.floor(Math.random() * 8 + 16);
+                const widthSegments = Math.floor(Math.random() * 8 + 20);
+                const heightSegments = Math.floor(Math.random() * 8 + 20);
                 geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
             } else {
                 const topRadius = Math.random() * 1.5;
                 const bottomRadius = Math.random() * 1.5;
                 const height = Math.random() * 3 + 0.5;
-                const radialSegments = Math.floor(Math.random() * 8 + 16);
-                geometry = new THREE.CylinderGeometry(topRadius, bottomRadius, height, radialSegments, 10);
+                const radialSegments = Math.floor(Math.random() * 8 + 20);
+                geometry = new THREE.CylinderGeometry(topRadius, bottomRadius, height, radialSegments, 15);
             }
 
             return geometry;
         }
 
-        function addSmoothProtrusions(geometry) {
+        // Apply extreme deformations with a minimum thickness constraint
+        function applyExtremeDeformationsWithThickness(geometry) {
             const vertices = geometry.attributes.position.array;
             const scale = 0.5;
-            const strength = Math.random() * 0.5 + 0.1;
+            const strength = Math.random() * 0.8 + 0.2;
+            const twistFactor = Math.random() * 0.1;
+            const bendFactor = Math.random() * 0.1;
+            const minThickness = 0.2;
+
+            const boundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(geometry));
+            const size = boundingBox.getSize(new THREE.Vector3());
 
             for (let i = 0; i < vertices.length; i += 3) {
-                const x = vertices[i];
-                const y = vertices[i + 1];
-                const z = vertices[i + 2];
-                const noiseValue = noise.noise3D(x * scale, y * scale, z * scale);
-                vertices[i] += noiseValue * strength;
-                vertices[i + 1] += noiseValue * strength;
-                vertices[i + 2] += noiseValue * strength;
+                let x = vertices[i];
+                let y = vertices[i + 1];
+                let z = vertices[i + 2];
+
+                let noiseValue1 = noise.noise3D(x * scale, y * scale, z * scale);
+                let noiseValue2 = noise.noise3D(x * scale * 2, y * scale * 2, z * scale * 2);
+                let combinedNoise = (noiseValue1 + noiseValue2 * 0.5) * strength;
+
+                let twistAmount = Math.sin(y * twistFactor) * 2.0;
+                let bendAmount = Math.sin(z * bendFactor) * 2.0;
+
+                x += combinedNoise + twistAmount;
+                y += combinedNoise + bendAmount;
+                z += combinedNoise;
+
+                if (Math.abs(x) < size.x * minThickness) x = Math.sign(x) * size.x * minThickness;
+                if (Math.abs(y) < size.y * minThickness) y = Math.sign(y) * size.y * minThickness;
+                if (Math.abs(z) < size.z * minThickness) z = Math.sign(z) * size.z * minThickness;
+
+                vertices[i] = x;
+                vertices[i + 1] = y;
+                vertices[i + 2] = z;
             }
 
             geometry.attributes.position.needsUpdate = true;
         }
 
-        const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, flatShading: true });
-        const randomSmoothGeometry = createRandomSmoothGeometry();
-        const model = new THREE.Mesh(randomSmoothGeometry, material);
-        scene.add(model);
+        function getRandomColor() {
+            const r = Math.floor(Math.random() * 256);
+            const g = Math.floor(Math.random() * 256);
+            const b = Math.floor(Math.random() * 256);
+            return `rgb(${r},${g},${b})`;
+        }
 
-        const boundingBox = new THREE.Box3().setFromObject(model);
-        const size = boundingBox.getSize(new THREE.Vector3()).length();
-        const scale = 25 / size;
-        model.scale.set(scale, scale, scale);
+        function generateObject() {
+            if (model) scene.remove(model);
 
-        camera.position.z = 50;
+            const material = new THREE.MeshStandardMaterial({ color: getRandomColor(), flatShading: true });
+            const crazyGeometry = createCrazyGeometry();
+            model = new THREE.Mesh(crazyGeometry, material);
+            scene.add(model);
+
+            const boundingBox = new THREE.Box3().setFromObject(model);
+            const size = boundingBox.getSize(new THREE.Vector3()).length();
+            const scale = 25 / size;
+            model.scale.set(scale, scale, scale);
+
+            camera.position.z = 50;
+        }
 
         function animate() {
             requestAnimationFrame(animate);
-            model.rotation.y += 0.005;
+            if (model) {
+                if (lastModel) {
+                    model.rotation.y += 0.005;
+                } else {
+                    model.rotation.y += 0.03;
+                }
+            }
             renderer.render(scene, camera);
         }
         animate();
@@ -119,72 +199,119 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        function downloadModel() {
-            const exportGeometry = model.geometry.clone();
-            exportGeometry.scale(model.scale.x, model.scale.y, model.scale.z);
-            const exporter = new THREE.OBJExporter();
-            const result = exporter.parse(new THREE.Mesh(exportGeometry, material));
-            const blob = new Blob([result], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'model.obj';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+        function startGeneratingObjects() {
+            let count = 0;
+            const interval = setInterval(() => {
+                if (count < 10) {
+                    generateObject();
+                    count++;
+                } else {
+                    clearInterval(interval);
+                    lastModel = true;
+                    saveFinalObject();
+                    showFinalText();
+                    startMusic(); // Start music after the final model is loaded
+                }
+            }, 300);
         }
 
-        document.getElementById('downloadBtn').addEventListener('click', downloadModel);
-
-        // Music and metronome setup
-        const context = new (window.AudioContext || window.webkitAudioContext)();
-        const melody = [220, 261.63, 293.66, 329.63, 392, 440, 493.88, 523.25];
-
-        function generateBeautifulSound() {
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-            const panNode = context.createStereoPanner();
-            const frequency = melody[Math.floor(Math.random() * melody.length)];
-            oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(frequency, context.currentTime);
-            gainNode.gain.setValueAtTime(0.05, context.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.1, context.currentTime + 0.5);
-            gainNode.gain.linearRampToValueAtTime(0.05, context.currentTime + 1.0);
-            panNode.pan.value = Math.random() * 2 - 1;
-            oscillator.connect(gainNode);
-            gainNode.connect(panNode);
-            panNode.connect(context.destination);
-            oscillator.start();
-            oscillator.stop(context.currentTime + 1);
+        function saveFinalObject() {
+            const finalObjectParams = {
+                geometry: model.geometry.parameters,
+                material: model.material.color.getHex(),
+                scale: model.scale,
+                rotation: { x: model.rotation.x, y: model.rotation.y, z: model.rotation.z }
+            };
+            localStorage.setItem('finalObject', JSON.stringify(finalObjectParams));
         }
 
-        function generateMetronome() {
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(1000, context.currentTime);
-            gainNode.gain.setValueAtTime(0.02, context.currentTime);
-            oscillator.connect(gainNode);
-            gainNode.connect(context.destination);
-            oscillator.start();
-            oscillator.stop(context.currentTime + 0.1);
+        function showFinalText() {
+            const textOverlay = document.getElementById('textOverlay');
+            const randomPhrase = document.getElementById('randomPhrase');
+
+            textOverlay.style.opacity = 1;
+            randomPhrase.style.opacity = 1;
+
+            const randomIndex = Math.floor(Math.random() * phrases.length);
+            randomPhrase.textContent = phrases[randomIndex];
+
+            setTimeout(() => {
+                textOverlay.style.opacity = 0;
+                randomPhrase.style.opacity = 0;
+            }, 10000); // Text stays visible for 10 seconds
         }
 
-        function startGeneratingBeautifulSounds() {
-            setInterval(generateBeautifulSound, 1000);
-        }
+        function startMusic() {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
 
-        function startMetronome(bpm) {
-            const interval = 60 / bpm * 1000;
-            setInterval(generateMetronome, interval);
-        }
+            // Define a simple melody with frequencies
+            const melody = [220, 261.63, 293.66, 329.63, 392, 440, 493.88, 523.25]; // C major scale
 
-        // Start music as soon as the page is loaded
-        document.addEventListener('DOMContentLoaded', () => {
+            function generateBeautifulSound() {
+                const oscillator = context.createOscillator();
+                const gainNode = context.createGain();
+                const panNode = context.createStereoPanner();
+
+                const frequency = melody[Math.floor(Math.random() * melody.length)];
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+                gainNode.gain.setValueAtTime(0.05, context.currentTime);
+
+                // Slow modulation for volume to create a more dynamic sound
+                gainNode.gain.linearRampToValueAtTime(0.1, context.currentTime + 0.5);
+                gainNode.gain.linearRampToValueAtTime(0.05, context.currentTime + 1.0);
+
+                // Panning to create a sense of space
+                panNode.pan.value = Math.random() * 2 - 1; // Pan between -1 and 1
+
+                oscillator.connect(gainNode);
+                gainNode.connect(panNode);
+                panNode.connect(context.destination);
+
+                oscillator.start();
+                oscillator.stop(context.currentTime + 1); // Longer duration for each sound
+            }
+
+            function generateMetronome() {
+                const oscillator = context.createOscillator();
+                const gainNode = context.createGain();
+
+                oscillator.type = 'square'; // Chip wave sound
+                oscillator.frequency.setValueAtTime(1000, context.currentTime); // High pitch
+                gainNode.gain.setValueAtTime(0.02, context.currentTime); // Quieter volume
+
+                oscillator.connect(gainNode);
+                gainNode.connect(context.destination);
+
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.1); // Short click sound
+            }
+
+            function startGeneratingBeautifulSounds() {
+                setInterval(generateBeautifulSound, 1000); // Generates a sound every 1000ms
+            }
+
+            function startMetronome(bpm) {
+                const interval = 60 / bpm * 1000; // Calculate interval in ms
+                setInterval(generateMetronome, interval); // Generate metronome clicks based on BPM
+            }
+
             startGeneratingBeautifulSounds();
-            startMetronome(60);
+            startMetronome(60); // Start metronome at 60 BPM
+        }
+
+        // Handle the download button
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const exporter = new THREE.OBJExporter();
+            const result = exporter.parse(model);
+            const blob = new Blob([result], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'crazy_model.obj';
+            link.click();
         });
+
+        startGeneratingObjects();
     </script>
 </body>
 </html>
