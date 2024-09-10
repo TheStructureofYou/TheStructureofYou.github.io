@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crazy 3D Model Viewer with Music</title>
+    <title>This is you</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -48,7 +48,7 @@
 <body>
     <div id="textOverlay">THIS IS YOU</div>
     <div id="randomPhrase"></div>
-    <button id="downloadBtn">Download Model</button>
+    <button id="downloadBtn">Download You</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
@@ -124,7 +124,7 @@
             const strength = Math.random() * 0.8 + 0.2;
             const twistFactor = Math.random() * 0.1;
             const bendFactor = Math.random() * 0.1;
-            const minThickness = 0.2;
+            const minThickness = 0.1;
 
             const boundingBox = new THREE.Box3().setFromObject(new THREE.Mesh(geometry));
             const size = boundingBox.getSize(new THREE.Vector3());
