@@ -7,18 +7,6 @@
     <style>
         body { margin: 0; }
         canvas { display: block; }
-        #downloadBtn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 10px 20px;
-            background-color: #0077ff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 10;
-        }
         #textOverlay {
             position: absolute;
             top: 20px;
@@ -48,7 +36,6 @@
 <body>
     <div id="textOverlay">THIS IS YOU</div>
     <div id="randomPhrase"></div>
-    <button id="downloadBtn">Download You</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
@@ -179,6 +166,9 @@
             model.scale.set(scale, scale, scale);
 
             camera.position.z = 50;
+
+            // Add userData to identify the model
+            model.userData = { isModel: true };
         }
 
         function animate() {
@@ -301,16 +291,30 @@
             startMetronome(60); // Start metronome at 60 BPM
         }
 
-        // Handle the download button
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            const exporter = new THREE.OBJExporter();
-            const result = exporter.parse(model);
-            const blob = new Blob([result], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'crazy_model.obj';
-            link.click();
-        });
+        // Handle clicks on the model for download
+        function onModelClick(event) {
+            const mouse = new THREE.Vector2();
+            const raycaster = new THREE.Raycaster();
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(model);
+
+            if (intersects.length > 0) {
+                const exporter = new THREE.OBJExporter();
+                const result = exporter.parse(model);
+                const blob = new Blob([result], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'crazy_model.obj';
+                link.click();
+            }
+        }
+
+        // Add event listener for clicks
+        window.addEventListener('click', onModelClick);
 
         startGeneratingObjects();
     </script>
